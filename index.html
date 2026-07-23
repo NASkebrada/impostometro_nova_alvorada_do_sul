@@ -8,97 +8,215 @@
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Chart.js para gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
+    
     <!-- Google Fonts (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&display=swap" rel="stylesheet">
     
-    <!-- Tailwind Config Customization -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
+    <style>
+        * { transition: background-color 0.3s ease, color 0.3s ease; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
-    </script>
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .float { animation: float 3s ease-in-out infinite; }
+        .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .slide-in { animation: slideIn 0.6s ease-out; }
+        
+        .dark-mode { 
+            @apply bg-slate-950 text-white;
+        }
+        
+        .dark-mode .card-dark {
+            @apply bg-slate-900 border-slate-800;
+        }
+    </style>
 </head>
-<body class="bg-white text-slate-900 font-sans min-h-screen flex flex-col items-center justify-center p-6 text-center antialiased">
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased transition-colors duration-500">
+
+    <!-- Toggle Dark Mode -->
+    <button id="darkModeToggle" class="fixed top-4 right-4 z-50 p-2 rounded-full bg-white shadow-lg hover:shadow-xl transition-all dark-mode-btn" title="Alternar tema">
+        🌙
+    </button>
 
     <!-- Container Principal -->
-    <main class="w-full max-w-2xl flex flex-col items-center justify-center flex-grow">
+    <main class="w-full max-w-5xl mx-auto flex flex-col flex-grow p-4 md:p-6">
         
         <!-- Cabeçalho -->
-        <h1 class="text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-900 mb-1">
-            Impostômetro <br> Nova Alvorada do Sul
-        </h1>
-        <h2 class="text-xs md:text-sm font-medium text-gray-400 mb-10">
-            (VALORES EM MILHÕES)
-        </h2>
-
-        <!-- Área do Contador -->
-        <div class="mb-10 w-full">
-            <p class="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">
-                Valor arrecadado em 2026
+        <div class="text-center mb-8 slide-in">
+            <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tight mb-2 float">
+                💰 Impostômetro
+            </h1>
+            <h2 class="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                Nova Alvorada do Sul
+            </h2>
+            <p class="text-sm md:text-base font-medium text-gray-500">
+                (VALORES EM MILHÕES) - 2026
             </p>
+        </div>
+
+        <!-- Grid Principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             
-            <div id="valor-gigante" class="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter mb-2 transition-all">
-                R$ 0,00
+            <!-- Contador Principal (2 colunas) -->
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 slide-in card-dark border border-blue-100 dark:border-slate-800">
+                    
+                    <!-- Rótulo -->
+                    <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">
+                        📊 Valor Arrecadado em 2026
+                    </p>
+                    
+                    <!-- Contador Grande -->
+                    <div class="mb-6">
+                        <div id="valor-gigante" class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 tracking-tighter mb-2 pulse-glow">
+                            R$ 0,00
+                        </div>
+                        <p id="valor-simplificado" class="text-2xl md:text-3xl font-bold text-gray-600 dark:text-gray-300">
+                            0,00 milhões
+                        </p>
+                    </div>
+                    
+                    <!-- Barra de Progresso -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-semibold text-gray-500">Progresso do Ano</span>
+                            <span id="percentual-ano" class="text-xs font-bold text-blue-600 dark:text-blue-400">0%</span>
+                        </div>
+                        <div class="w-full h-3 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div id="barra-progresso" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Estatísticas Rápidas -->
+                    <div class="grid grid-cols-3 gap-3 mb-6 text-center">
+                        <div class="bg-blue-50 dark:bg-slate-800 p-3 rounded-lg">
+                            <p class="text-xs text-gray-500 mb-1">Por Segundo</p>
+                            <p id="taxa-segundo" class="font-bold text-blue-600 dark:text-blue-400">R$ 6,86</p>
+                        </div>
+                        <div class="bg-indigo-50 dark:bg-slate-800 p-3 rounded-lg">
+                            <p class="text-xs text-gray-500 mb-1">Por Minuto</p>
+                            <p id="taxa-minuto" class="font-bold text-indigo-600 dark:text-indigo-400">R$ 411,60</p>
+                        </div>
+                        <div class="bg-purple-50 dark:bg-slate-800 p-3 rounded-lg">
+                            <p class="text-xs text-gray-500 mb-1">Por Hora</p>
+                            <p id="taxa-hora" class="font-bold text-purple-600 dark:text-purple-400">R$ 24,7k</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Datas -->
+                    <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 space-y-1">
+                        <p>📅 Hoje: <span id="data-hoje">--/--/----</span></p>
+                        <p>🕐 Última atualização: <span id="data-atualizacao">--:--:--</span></p>
+                    </div>
+                </div>
             </div>
-            
-            <p id="valor-simplificado" class="text-lg md:text-xl font-medium text-gray-500">
-                0,00 milhões
-            </p>
+
+            <!-- Sidebar - QR + Info -->
+            <div class="flex flex-col gap-6">
+                
+                <!-- QR Code -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 text-center slide-in card-dark border border-blue-100 dark:border-slate-800">
+                    <img id="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://naskebrada.github.io/impostometro_nova_alvorada_do_sul/" 
+                         alt="QR Code" 
+                         class="w-full max-w-40 mx-auto rounded-xl shadow-lg border-4 border-blue-100 dark:border-slate-700 mb-3">
+                    <p class="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                        📱 Compartilhe!
+                    </p>
+                </div>
+
+                <!-- Milestone -->
+                <div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-slate-800 dark:to-slate-850 rounded-2xl shadow-lg p-6 slide-in border-2 border-yellow-200 dark:border-slate-700">
+                    <p class="text-xs font-bold text-amber-600 dark:text-amber-400 mb-2">🎯 PRÓXIMO MILESTONE</p>
+                    <p id="milestone-valor" class="text-2xl font-black text-amber-700 dark:text-amber-300">R$ 50M</p>
+                    <p id="milestone-falta" class="text-xs text-amber-600 dark:text-amber-400 mt-2">Faltam R$ 0</p>
+                </div>
+            </div>
         </div>
 
-        <!-- QR Code e CTA -->
-        <div class="flex flex-col items-center mb-10">
-            <img id="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://naskebrada.github.io/impostometro_nova_alvorada_do_sul/" 
-                 alt="QR Code para compartilhar" 
-                 class="w-32 h-32 md:w-36 md:h-36 rounded-xl shadow-sm border border-gray-200 mb-3 p-1">
-            <p class="text-xs md:text-sm font-medium text-gray-400">
-                mostra para seu amigo!
-            </p>
+        <!-- Gráfico de Distribuição -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 slide-in card-dark border border-blue-100 dark:border-slate-800 mb-8">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📈 Onde vai o dinheiro?</h3>
+            <canvas id="chartDistribuicao" height="80"></canvas>
         </div>
 
-        <!-- Datas em Tempo Real -->
-        <div class="text-xs md:text-sm font-medium text-gray-500 mb-12 space-y-1">
-            <p id="data-hoje">Hoje: --/--/----</p>
-            <p id="data-atualizacao">Última atualização: --/--/----, --:--:--</p>
-        </div>
-
+        <!-- Rodapé -->
+        <footer class="text-center text-xs md:text-sm text-gray-600 dark:text-gray-400 space-y-2 py-6">
+            <p class="font-medium">A contagem é simbólica e construída a partir de estimativas de arrecadação.</p>
+            <p>🎨 Projeto simbólico — números aproximados</p>
+            <p>⚡ app criado por <span class="font-bold text-slate-900 dark:text-white">@n.a.s.kebradas</span></p>
+            <p class="text-xs opacity-75">v2.0 - Premium Edition ✨</p>
+        </footer>
     </main>
 
-    <!-- Rodapé / Avisos Legais -->
-    <footer class="w-full max-w-md mx-auto text-[10px] md:text-xs text-gray-400 leading-relaxed mt-auto pb-4">
-        <p class="mb-4">
-            a contagem é simbólica e construída a partir de estimativas de arrecadação — para fins de transparência cidadã.
-        </p>
-        <p class="mb-1">
-            Projeto simbólico — números aproximados
-        </p>
-        <p>
-            app criado por <span class="font-bold text-slate-700">@n.a.s.kebradas</span>
-        </p>
-    </footer>
-
-    <!-- Lógica do Impostômetro -->
+    <!-- Script Principal -->
     <script>
-        // Configurações e Constantes
-        // Define a data de início: 1º de Janeiro de 2026 às 00:00:00 (Fuso horário de Brasília -03:00 para precisão)
+        // ==================== CONFIGURAÇÕES ====================
         const DATA_INICIO = new Date('2026-01-01T00:00:00-03:00').getTime();
         const TAXA_POR_SEGUNDO = 6.86;
+        const TOTAL_ANUAL = 94300000;
+        const MILESTONES = [50000000, 100000000, 150000000];
+        
+        let ultimoMilestone = 0;
+        let chart = null;
+        let darkMode = localStorage.getItem('darkMode') === 'true';
 
-        // Elementos do DOM
+        // ==================== DARK MODE ====================
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+
+        function atualizarDarkMode() {
+            if (darkMode) {
+                html.classList.add('dark');
+                darkModeToggle.textContent = '☀️';
+                document.body.classList.add('dark-mode');
+            } else {
+                html.classList.remove('dark');
+                darkModeToggle.textContent = '🌙';
+                document.body.classList.remove('dark-mode');
+            }
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        darkModeToggle.addEventListener('click', () => {
+            darkMode = !darkMode;
+            atualizarDarkMode();
+        });
+
+        atualizarDarkMode();
+
+        // ==================== ELEMENTOS DOM ====================
         const elValorGigante = document.getElementById('valor-gigante');
         const elValorSimplificado = document.getElementById('valor-simplificado');
         const elDataHoje = document.getElementById('data-hoje');
         const elDataAtualizacao = document.getElementById('data-atualizacao');
+        const elBarraProgresso = document.getElementById('barra-progresso');
+        const elPercentualAno = document.getElementById('percentual-ano');
+        const elMilestoneValor = document.getElementById('milestone-valor');
+        const elMilestoneFalta = document.getElementById('milestone-falta');
+        const elTaxaSegundo = document.getElementById('taxa-segundo');
+        const elTaxaMinuto = document.getElementById('taxa-minuto');
+        const elTaxaHora = document.getElementById('taxa-hora');
 
-        // Formatadores
+        // ==================== FORMATADORES ====================
         const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
@@ -113,49 +231,99 @@
         });
 
         const formatadorDataHora = new Intl.DateTimeFormat('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
         });
 
-        // Função de Atualização Principal
+        // ==================== CONFETTI ====================
+        function dispararConfeti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // ==================== GRÁFICO ====================
+        function inicializarGrafico() {
+            const ctx = document.getElementById('chartDistribuicao').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Saúde', 'Educação', 'Infraestrutura', 'Administração', 'Outros'],
+                    datasets: [{
+                        data: [28, 25, 22, 15, 10],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#8b5cf6',
+                            '#ec4899',
+                            '#f59e0b',
+                            '#10b981'
+                        ],
+                        borderColor: darkMode ? '#1e293b' : '#ffffff',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: darkMode ? '#e2e8f0' : '#374151',
+                                font: { size: 14, weight: 'bold' },
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== ATUALIZAR IMPOSTÔMETRO ====================
         function atualizarImpostometro() {
             const agora = new Date();
             const timestampAgora = agora.getTime();
-
-            // Evita números negativos se a data atual for anterior a 2026 (por segurança)
             const diferencaMilissegundos = Math.max(0, timestampAgora - DATA_INICIO);
-            
-            // Calcula a diferença em segundos (podendo ter casas decimais para animação fluida, 
-            // mas mantendo a lógica de crescimento constante por segundo)
             const diferencaSegundos = diferencaMilissegundos / 1000;
-
-            // Multiplica pela taxa
             const valorAtual = diferencaSegundos * TAXA_POR_SEGUNDO;
 
-            // Atualiza os valores na tela
+            // Valor principal
             elValorGigante.textContent = formatadorMoeda.format(valorAtual);
+            elValorSimplificado.textContent = `${(valorAtual / 1000000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} milhões`;
 
-            // Calcula o valor simplificado em milhões
-            const valorEmMilhoes = valorAtual / 1000000;
-            const textoMilhoes = valorEmMilhoes.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-            elValorSimplificado.textContent = `${textoMilhoes} milhões`;
+            // Progresso do ano
+            const yearStart = new Date('2026-01-01').getTime();
+            const yearEnd = new Date('2027-01-01').getTime();
+            const percentual = ((timestampAgora - yearStart) / (yearEnd - yearStart) * 100);
+            elBarraProgresso.style.width = Math.min(100, percentual) + '%';
+            elPercentualAno.textContent = Math.min(100, Math.round(percentual)) + '%';
 
-            // Atualiza as datas
-            elDataHoje.textContent = `Hoje: ${formatadorData.format(agora)}`;
-            elDataAtualizacao.textContent = `Última atualização: ${formatadorDataHora.format(agora)}`;
+            // Taxas
+            elTaxaMinuto.textContent = formatadorMoeda.format(TAXA_POR_SEGUNDO * 60);
+            elTaxaHora.textContent = formatadorMoeda.format(TAXA_POR_SEGUNDO * 3600);
+
+            // Datas
+            elDataHoje.textContent = formatadorData.format(agora);
+            elDataAtualizacao.textContent = formatadorDataHora.format(agora);
+
+            // Milestone
+            const proximoMilestone = MILESTONES.find(m => m > valorAtual) || TOTAL_ANUAL;
+            elMilestoneValor.textContent = formatadorMoeda.format(proximoMilestone);
+            elMilestoneFalta.textContent = `Faltam ${formatadorMoeda.format(proximoMilestone - valorAtual)}`;
+
+            // Confetti ao atingir milestone
+            if (proximoMilestone !== ultimoMilestone && valorAtual >= proximoMilestone) {
+                ultimoMilestone = proximoMilestone;
+                dispararConfeti();
+            }
         }
 
-        // Executa imediatamente ao carregar
+        // ==================== INICIALIZAÇÃO ====================
+        inicializarGrafico();
         atualizarImpostometro();
-
-        // Atualiza a cada 1 segundo (1000 ms) exatamente como pedido
         setInterval(atualizarImpostometro, 1000);
     </script>
 </body>
